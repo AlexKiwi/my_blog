@@ -25,6 +25,7 @@ class Category(models.Model):
 class Tag(models.Model):
     name = models.CharField(max_length=30, verbose_name='标签名称')
     display_order = models.IntegerField(default=999, verbose_name='标签排序')
+    color = models.CharField(max_length=10, default='#FFE9DC', verbose_name='标签颜色')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
     is_delete = models.BooleanField(default=False)
