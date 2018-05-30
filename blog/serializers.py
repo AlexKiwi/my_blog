@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Category, Article, Tag, Comments
+from .models import Category, Article, Tag, Comments, Suggest
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -27,6 +27,12 @@ class CommentsSerializer(serializers.ModelSerializer):
         fields = ('__all__')
 
 
+class SuggestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Suggest
+        fields = ('__all__')
+
+
 class CategoryCheckSerializer(serializers.Serializer):
     category_id = serializers.IntegerField(required=True)
 
@@ -41,3 +47,7 @@ class TagCheckSerializer(serializers.Serializer):
 
 class CommentsCheckSerializer(serializers.Serializer):
     comment_id = serializers.IntegerField(required=True)
+
+
+class SuggestCheckSerializer(serializers.Serializer):
+    suggest_id = serializers.IntegerField(required=True)
