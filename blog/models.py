@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import time
+
 from django.db import models
 from django.contrib.auth import get_user_model
 from .base_model import BaseModel
@@ -44,7 +45,7 @@ class Article(BaseModel):
         ('PART', '未发布'),
         ('PUBLISHED', '已发布'),
     )
-
+    user = models.ForeignKey(get_user_model(), verbose_name='用户')
     category = models.ForeignKey(Category, verbose_name='所属分类')
     tag = models.ManyToManyField(Tag, verbose_name='标签', null=True, blank=True, help_text='标签id可以对应多个')
     title = models.CharField('标题', max_length=255)
@@ -67,7 +68,8 @@ class Article(BaseModel):
 
 
 class Comments(BaseModel):
-    user = models.ForeignKey(get_user_model(), verbose_name='用户')
+    name = models.CharField('姓名', max_length=30)
+    email = models.EmailField(null=True, blank=True)
     article = models.ForeignKey(Article, verbose_name='文章')
     comment = models.ForeignKey('self',  verbose_name='被回复的评论', on_delete=models.CASCADE, null=True, blank=True)
     content = models.TextField('评论内容')
@@ -77,15 +79,16 @@ class Comments(BaseModel):
         verbose_name_plural = verbose_name
 
     def __unicode__(self):
-        return self.user + self.created_at
+        return self.name + str(self.created_at)
 
 
 class Suggest(BaseModel):
     """
     意见存储
     """
-    user = models.ForeignKey(get_user_model(), verbose_name='用户')
-    suggest = models.TextField('意见', max_length=200)
+    name = models.CharField('姓名', max_length=30)
+    email = models.EmailField(null=True, blank=True)
+    suggest = models.TextField('意见', max_length=300)
 
     def __str__(self):
         return self.suggest

@@ -9,4 +9,4 @@ class ArticleFilter(django_filters.rest_framework.FilterSet):
 
     class Meta:
         model = Article
-        fields = ['category', 'tag']
+        fields = ['category', 'tag', 'status']

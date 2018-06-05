@@ -37,12 +37,14 @@ class TagViewSet(FormatSuccessResponse, mixins.CreateModelMixin, mixins.UpdateMo
     serializer_class = TagSerializer
 
 
+# TODO 别人评论会发邮件同时 自己回复评论也要通知别人
 class CommentViewSet(FormatSuccessResponse, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.RetrieveModelMixin,
                      mixins.ListModelMixin, LogicalDeleteMixin, GenericForAdminViewSet):
     queryset = Comments.objects.filter(deleted_at=None)
     serializer_class = CommentsSerializer
 
 
+# TODO 提出建议发邮件通知 同时发邮件感谢别人
 class SuggestViewSet(FormatSuccessResponse, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.ListModelMixin,
                      mixins.RetrieveModelMixin, LogicalDeleteMixin, GenericForAdminViewSet):
     queryset = Suggest.objects.filter()

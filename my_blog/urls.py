@@ -17,15 +17,15 @@ from django.conf.urls import url, include
 from django.contrib import admin
 from rest_framework import routers
 from rest_framework.documentation import include_docs_urls
+from rest_framework_jwt.views import obtain_jwt_token
 from rest_framework_swagger.views import get_swagger_view
 
-from blog import views as blog_views
-
+from user.views import APITokenView
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^auth/', include('rest_framework.urls', namespace='rest_framework')),
-    # url(r'^admin-api/login/', LoginView.as_view()),
+    url(r'^api-token-auth/', APITokenView.as_view()),
     url(r'docs/', get_swagger_view(title="个人博客")),
     url(r'docs1/', include_docs_urls(title="个人博客")),
     url(r'^blog/', include('blog.urls'), name='blog')
