@@ -14,7 +14,7 @@ class Category(BaseModel):
     class Meta:
         verbose_name = "文章分类"
         verbose_name_plural = verbose_name
-        ordering = ["display_order", 'pk']
+        ordering = ["display_order", '-created_at']
 
     def __unicode__(self):
         return self.name
@@ -28,14 +28,20 @@ class Tag(BaseModel):
     class Meta:
         verbose_name = "文章标签"
         verbose_name_plural = verbose_name
-        ordering = ["display_order", 'pk']
+        ordering = ["display_order", '-created_at']
 
     def __unicode__(self):
         return self.name
 
 
-def image_upload_to(filename):
+def image_upload_to(instance, filename):
     """文章图存储位置"""
+    suffix = filename.split('.')[-1]
+    return 'blog/article/{0}'.format(str(time.time()) + '.' + suffix)
+
+
+def article_upload_to(instance, filename):
+    """文章存储位置"""
     suffix = filename.split('.')[-1]
     return 'blog/article/{0}'.format(str(time.time()) + '.' + suffix)
 
@@ -49,10 +55,10 @@ class Article(BaseModel):
     category = models.ForeignKey(Category, verbose_name='所属分类')
     tag = models.ManyToManyField(Tag, verbose_name='标签', null=True, blank=True, help_text='标签id可以对应多个')
     title = models.CharField('标题', max_length=255)
-    description = models.CharField('描述/摘要', max_length=255, null=False, blank=False)
+    description = models.CharField('描述/摘要', max_length=255, null=True, blank=True)
     views = models.PositiveIntegerField('访问量', default=0)
-    img = models.ImageField('文章图片', upload_to=image_upload_to)
-    article = models.TextField('文章')
+    img = models.ImageField('文章图片', upload_to=image_upload_to, null=True, blank=True)
+    article = models.FileField('文章', upload_to=article_upload_to)
     likes = models.PositiveIntegerField('点赞数', default=0)
     topped = models.BooleanField('置顶', default=False)
     status = models.CharField('文章状态', max_length=10, choices=STATUS_CHOICES)
@@ -61,7 +67,7 @@ class Article(BaseModel):
     class Meta:
         verbose_name = "文章"
         verbose_name_plural = verbose_name
-        ordering = ["display_order", 'pk']
+        ordering = ["display_order", '-created_at']
 
     def __unicode__(self):
         return self.title
@@ -71,12 +77,16 @@ class Comments(BaseModel):
     name = models.CharField('姓名', max_length=30)
     email = models.EmailField(null=True, blank=True)
     article = models.ForeignKey(Article, verbose_name='文章')
-    comment = models.ForeignKey('self',  verbose_name='被回复的评论', on_delete=models.CASCADE, null=True, blank=True)
+    comment_top = models.ForeignKey('self', verbose_name='楼主评论', on_delete=models.CASCADE, null=True, blank=True,
+                                    related_name='top_comments')
+    comment = models.ForeignKey('self',  verbose_name='被回复的评论', on_delete=models.CASCADE, null=True, blank=True,
+                                related_name='comments')
     content = models.TextField('评论内容')
 
     class Meta:
         verbose_name = "评论"
         verbose_name_plural = verbose_name
+        ordering = ["-created_at"]
 
     def __unicode__(self):
         return self.name + str(self.created_at)
@@ -89,6 +99,11 @@ class Suggest(BaseModel):
     name = models.CharField('姓名', max_length=30)
     email = models.EmailField(null=True, blank=True)
     suggest = models.TextField('意见', max_length=300)
+
+    class Meta:
+        verbose_name = "意见"
+        verbose_name_plural = verbose_name
+        ordering = ["-created_at"]
 
     def __str__(self):
         return self.suggest

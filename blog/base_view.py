@@ -74,7 +74,6 @@ def api_exception_handler(exc, context):
     if response is not None:
         # print response.data
         # if isinstance(exc, exceptions.ValidationError):
-        print(response.data)
         data = response.data
         response.data = {}
         if 'detail' in data and not isinstance(data['detail'], (list, dict)):
