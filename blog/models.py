@@ -1,38 +1,34 @@
 from __future__ import unicode_literals
 
 import time
+
 from django.db import models
 from django.contrib.auth import get_user_model
-# Create your models here.
+from .base_model import BaseModel
 
 
-class Category(models.Model):
-    name = models.CharField(max_length=31, verbose_name='分类名称')
-    display_order = models.IntegerField(default=999, verbose_name='分类排序')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
-    is_delete = models.BooleanField(default=False)
+class Category(BaseModel):
+    name = models.CharField('分类名称', max_length=31)
+    display_order = models.IntegerField('分类排序', default=999)
 
     class Meta:
-        verbose_name = "产品分类"
+        verbose_name = "文章分类"
         verbose_name_plural = verbose_name
-        ordering = ["display_order", 'pk']
+        ordering = ["display_order", '-created_at']
 
     def __unicode__(self):
         return self.name
 
 
-class Tag(models.Model):
-    name = models.CharField(max_length=30, verbose_name='标签名称')
-    display_order = models.IntegerField(default=999, verbose_name='标签排序')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
-    is_delete = models.BooleanField(default=False)
+class Tag(BaseModel):
+    name = models.CharField('标签名称', max_length=30)
+    display_order = models.IntegerField('标签排序', default=999)
+    color = models.CharField('标签颜色', max_length=10, default='#FFE9DC')
 
     class Meta:
         verbose_name = "文章标签"
         verbose_name_plural = verbose_name
-        ordering = ["display_order", 'pk']
+        ordering = ["display_order", '-created_at']
 
     def __unicode__(self):
         return self.name
@@ -44,40 +40,70 @@ def image_upload_to(instance, filename):
     return 'blog/article/{0}'.format(str(time.time()) + '.' + suffix)
 
 
-class Article(models.Model):
+def article_upload_to(instance, filename):
+    """文章存储位置"""
+    suffix = filename.split('.')[-1]
+    return 'blog/article/{0}'.format(str(time.time()) + '.' + suffix)
+
+
+class Article(BaseModel):
+    STATUS_CHOICES = (
+        ('PART', '未发布'),
+        ('PUBLISHED', '已发布'),
+    )
+    user = models.ForeignKey(get_user_model(), verbose_name='用户')
     category = models.ForeignKey(Category, verbose_name='所属分类')
-    tag = models.ManyToManyField(Tag, verbose_name='标签')
-    title = models.CharField(max_length=255, verbose_name='标题')
-    description = models.CharField(max_length=255, verbose_name='描述')
-    views = models.IntegerField(default=0, verbose_name='访问量')
-    img = models.ImageField(upload_to=image_upload_to, verbose_name='文章图片')
-    article = models.TextField('文章')
-    display_order = models.IntegerField(default=999, verbose_name='标签排序')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
-    is_delete = models.BooleanField(default=False)
+    tag = models.ManyToManyField(Tag, verbose_name='标签', null=True, blank=True, help_text='标签id可以对应多个')
+    title = models.CharField('标题', max_length=255)
+    description = models.CharField('描述/摘要', max_length=255, null=True, blank=True)
+    views = models.PositiveIntegerField('访问量', default=0)
+    img = models.ImageField('文章图片', upload_to=image_upload_to, null=True, blank=True)
+    article = models.FileField('文章', upload_to=article_upload_to)
+    likes = models.PositiveIntegerField('点赞数', default=0)
+    topped = models.BooleanField('置顶', default=False)
+    status = models.CharField('文章状态', max_length=10, choices=STATUS_CHOICES)
+    display_order = models.IntegerField('标签排序', default=999)
 
     class Meta:
         verbose_name = "文章"
         verbose_name_plural = verbose_name
-        ordering = ["display_order", 'pk']
+        ordering = ["display_order", '-created_at']
 
     def __unicode__(self):
         return self.title
 
 
-class Comments(models.Model):
-    user = models.ForeignKey(get_user_model(), verbose_name='用户')
+class Comments(BaseModel):
+    name = models.CharField('姓名', max_length=30)
+    email = models.EmailField(null=True, blank=True)
     article = models.ForeignKey(Article, verbose_name='文章')
-    comment = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, verbose_name='被回复的评论')
-    content = models.TextField(verbose_name='评论内容')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
-    is_delete = models.BooleanField(default=False)
+    comment_top = models.ForeignKey('self', verbose_name='楼主评论', on_delete=models.CASCADE, null=True, blank=True,
+                                    related_name='top_comments')
+    comment = models.ForeignKey('self',  verbose_name='被回复的评论', on_delete=models.CASCADE, null=True, blank=True,
+                                related_name='comments')
+    content = models.TextField('评论内容')
 
     class Meta:
         verbose_name = "评论"
         verbose_name_plural = verbose_name
+        ordering = ["-created_at"]
 
     def __unicode__(self):
-        return self.user + self.created_at
+        return self.name + str(self.created_at)
+
+
+class Suggest(BaseModel):
+    """
+    意见存储
+    """
+    name = models.CharField('姓名', max_length=30)
+    email = models.EmailField(null=True, blank=True)
+    suggest = models.TextField('意见', max_length=300)
+
+    class Meta:
+        verbose_name = "意见"
+        verbose_name_plural = verbose_name
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.suggest

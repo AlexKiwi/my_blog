@@ -15,7 +15,7 @@ class Profile(models.Model):
     mobile = models.CharField(max_length=15, unique=True, verbose_name='手机号')
     nickname = models.CharField(max_length=50, unique=True)
     image = models.ImageField(upload_to="user/avatars", max_length=100, verbose_name="头像")
-    sex = models.CharField(max_length=1, choices=Sex.Choices, defaul=0, verbose_name="性别")
+    sex = models.CharField(max_length=1, choices=Sex.Choices, default=0, verbose_name="性别")
 
     class Meta:
         verbose_name = "用户补充"
